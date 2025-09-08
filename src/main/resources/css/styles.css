@@ -26,6 +26,10 @@
     -fx-pref-width: 100px;
 }
 
+.input-panel .label {
+    -fx-padding: 0 5 0 0;
+}
+
 .status-bar {
     -fx-padding: 5;
     -fx-background-color: #eee;

@@ -22,6 +22,7 @@
     <top>
         <ToolBar>
             <Button text="Удалить точку" onAction="#handleRemovePoint" />
+            <Button text="Редактировать точку" onAction="#handleEditPoint" />
             <Button text="Загрузить из файла" onAction="#handleLoadFile" />
             <Button text="Сохранить в файл" onAction="#handleSaveReport" />
             <Button text="Рассчитать" onAction="#handleCalculate" />
@@ -33,23 +34,24 @@
             <!-- Левая часть: Таблица точек -->
             <VBox>
                 <ScrollPane fitToWidth="true">
-                    <TableView fx:id="pointsTable" styleClass="table-view">
+                    <TableView fx:id="pointsTable" styleClass="table-view" editable="true">
                         <columns>
                             <TableColumn fx:id="xColumn" text="X" sortable="false"
-                                         prefWidth="150" />
+                                         prefWidth="150" editable="true" />
                             <TableColumn fx:id="yColumn" text="Y" sortable="false"
-                                         prefWidth="150" />
+                                         prefWidth="150" editable="true" />
                         </columns>
                     </TableView>
                 </ScrollPane>
 
-                <!-- Форма добавления точки -->
-                <HBox styleClass="input-panel">
+                <!-- Форма добавления/редактирования точки -->
+                <HBox styleClass="input-panel" spacing="5">
                     <Label text="X:" />
                     <TextField fx:id="xInput" prefWidth="80" />
                     <Label text="Y:" />
                     <TextField fx:id="yInput" prefWidth="80" />
-                    <Button text="Добавить" onAction="#handleAddPoint" />
+                    <Button fx:id="addUpdateButton" text="Добавить" onAction="#handleAddPoint" />
+                    <Button text="Отмена" onAction="#handleCancelEdit" />
                 </HBox>
             </VBox>
 

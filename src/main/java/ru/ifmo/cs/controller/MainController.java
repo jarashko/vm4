@@ -11,12 +11,15 @@ import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.converter.DoubleStringConverter;
 import ru.ifmo.cs.model.DataPoint;
 import ru.ifmo.cs.model.functions.FunctionApproximation;
 import ru.ifmo.cs.service.FileService;
@@ -35,6 +38,8 @@ public class MainController {
     private TextField xInput;
     @FXML
     private TextField yInput;
+    @FXML
+    private Button addUpdateButton;
 
     @FXML
     private LineChart<Number, Number> chart;
@@ -54,11 +59,31 @@ public class MainController {
     private final FileService fileService = new FileService();
     private final RegressionService regressionService = new RegressionService();
     private RegressionResult lastResult;
+    
+    private DataPoint editingPoint = null; // Точка, которую мы редактируем
 
     @FXML
     public void initialize() {
         xColumn.setCellValueFactory(new PropertyValueFactory<>("x"));
         yColumn.setCellValueFactory(new PropertyValueFactory<>("y"));
+        
+        // Настройка редактируемых ячеек
+        xColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        yColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        
+        // Обработчики для редактирования
+        xColumn.setOnEditCommit(event -> {
+            DataPoint point = event.getRowValue();
+            point.setX(event.getNewValue());
+            updateStatus("Точка обновлена: (" + point.getX() + ", " + point.getY() + ")");
+        });
+        
+        yColumn.setOnEditCommit(event -> {
+            DataPoint point = event.getRowValue();
+            point.setY(event.getNewValue());
+            updateStatus("Точка обновлена: (" + point.getX() + ", " + point.getY() + ")");
+        });
+        
         pointsTable.setItems(dataPoints);
 
         chart.setAnimated(false);
@@ -74,9 +99,20 @@ public class MainController {
             double x = parseDouble(xInput.getText(), "X");
             double y = parseDouble(yInput.getText(), "Y");
 
-            dataPoints.add(new DataPoint(x, y));
-            clearInputs();
-            updateStatus("Точка добавлена: (" + x + ", " + y + ")");
+            if (editingPoint != null) {
+                // Режим редактирования - обновляем существующую точку
+                editingPoint.setX(x);
+                editingPoint.setY(y);
+                editingPoint = null;
+                addUpdateButton.setText("Добавить");
+                clearInputs();
+                updateStatus("Точка обновлена: (" + x + ", " + y + ")");
+            } else {
+                // Режим добавления - добавляем новую точку
+                dataPoints.add(new DataPoint(x, y));
+                clearInputs();
+                updateStatus("Точка добавлена: (" + x + ", " + y + ")");
+            }
         } catch (NumberFormatException e) {
             updateStatus("Ошибка: " + e.getMessage());
         }
@@ -93,6 +129,34 @@ public class MainController {
 
         dataPoints.removeAll(selectedPoints);
         updateStatus("Удалено точек: " + selectedPoints.size());
+    }
+
+    @FXML
+    private void handleEditPoint() {
+        DataPoint selectedPoint = pointsTable.getSelectionModel().getSelectedItem();
+
+        if (selectedPoint == null) {
+            updateStatus("Ошибка: Не выбрана точка для редактирования");
+            return;
+        }
+
+        // Устанавливаем режим редактирования
+        editingPoint = selectedPoint;
+        addUpdateButton.setText("Обновить");
+        
+        // Заполняем поля ввода текущими значениями выбранной точки
+        xInput.setText(String.valueOf(selectedPoint.getX()));
+        yInput.setText(String.valueOf(selectedPoint.getY()));
+        
+        updateStatus("Режим редактирования. Измените значения и нажмите 'Обновить'");
+    }
+
+    @FXML
+    private void handleCancelEdit() {
+        editingPoint = null;
+        clearInputs();
+        addUpdateButton.setText("Добавить");
+        updateStatus("Режим редактирования отменен");
     }
 
     @FXML
@@ -320,7 +384,8 @@ public class MainController {
             throw new NumberFormatException("Поле '" + fieldName + "' пустое");
         }
         try {
-            return Double.parseDouble(value.trim());
+            String normalizedValue = value.trim().replace(',', '.');
+            return Double.parseDouble(normalizedValue);
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Неверный формат числа в поле '" + fieldName + "'");
         }

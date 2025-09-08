@@ -57,9 +57,10 @@ public class FileService {
                 String[] parts = line.split("[,\\s]+");
                 if (parts.length >= 2) {
                     try {
-                        double x = Double.parseDouble(parts[0].trim());
-                        double y = Double.parseDouble(parts[1].trim());
-                        points.add(new DataPoint(x, y));
+                        String xStr = parts[0].trim().replace(',', '.');
+                        String yStr = parts[1].trim().replace(',', '.');
+                        double x = Double.parseDouble(xStr);
+                        double y = Double.parseDouble(yStr);
                     } catch (NumberFormatException e) {
                         System.err.println("Ошибка формата данных в строке: " + line);
                     }
