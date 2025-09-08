@@ -61,6 +61,11 @@ public class FileService {
                         String yStr = parts[1].trim().replace(',', '.');
                         double x = Double.parseDouble(xStr);
                         double y = Double.parseDouble(yStr);
+                        if (Double.isFinite(x) && Double.isFinite(y)) {
+                            points.add(new DataPoint(x, y));
+                        } else {
+                            System.err.println("Невалидные значения (NaN/Inf) в строке: " + line);
+                        }
                     } catch (NumberFormatException e) {
                         System.err.println("Ошибка формата данных в строке: " + line);
                     }
