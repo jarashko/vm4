@@ -19,6 +19,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.control.SelectionMode;
 import javafx.util.converter.DoubleStringConverter;
 import ru.ifmo.cs.model.DataPoint;
 import ru.ifmo.cs.model.functions.FunctionApproximation;
@@ -70,6 +71,8 @@ public class MainController {
         // Настройка редактируемых ячеек
         xColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         yColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        pointsTable.setEditable(true);
+        pointsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         
         // Обработчики для редактирования
         xColumn.setOnEditCommit(event -> {
@@ -385,7 +388,11 @@ public class MainController {
         }
         try {
             String normalizedValue = value.trim().replace(',', '.');
-            return Double.parseDouble(normalizedValue);
+            double parsed = Double.parseDouble(normalizedValue);
+            if (!Double.isFinite(parsed)) {
+                throw new NumberFormatException("В поле '" + fieldName + "' недопустимое значение (NaN/Infinity)");
+            }
+            return parsed;
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Неверный формат числа в поле '" + fieldName + "'");
         }

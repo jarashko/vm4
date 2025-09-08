@@ -24,7 +24,8 @@
             <Button text="Удалить точку" onAction="#handleRemovePoint" />
             <Button text="Редактировать точку" onAction="#handleEditPoint" />
             <Button text="Загрузить из файла" onAction="#handleLoadFile" />
-            <Button text="Сохранить в файл" onAction="#handleSaveReport" />
+            <Button text="Сохранить в файл" onAction="#handleSaveFile" />
+            <Button text="Сохранить отчет" onAction="#handleSaveReport" />
             <Button text="Рассчитать" onAction="#handleCalculate" />
         </ToolBar>
     </top>
