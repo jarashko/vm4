@@ -135,6 +135,19 @@ public class MainController {
     }
 
     @FXML
+    private void handleClearAllPoints() {
+        if (dataPoints.isEmpty()) {
+            updateStatus("Точек нет");
+            return;
+        }
+        dataPoints.clear();
+        chart.getData().clear();
+        resultsArea.clear();
+        lastResult = null;
+        updateStatus("Все точки удалены");
+    }
+
+    @FXML
     private void handleEditPoint() {
         DataPoint selectedPoint = pointsTable.getSelectionModel().getSelectedItem();
 
@@ -216,13 +229,8 @@ public class MainController {
 
     @FXML
     private void handleCalculate() {
-        if (dataPoints.size() < 8) {
-            updateStatus("Ошибка: Минимум 8 точек требуется");
-            return;
-        }
-
-        if (dataPoints.size() > 12) {
-            updateStatus("Ошибка: Максимум 12 точек разрешено");
+        if (dataPoints.size() < 2) {
+            updateStatus("Ошибка: Минимум 2 точки требуются");
             return;
         }
 
@@ -252,50 +260,48 @@ public class MainController {
                 .append(result.getBestFunction().getName())
                 .append("\n\n");
 
-        sb.append("КОЭФФИЦИЕНТЫ ФУНКЦИЙ:\n");
-        for (FunctionApproximation fa : result.getAllFunctions()) {
-            sb.append(String.format("%-15s: ", fa.getName()))
-                    .append(fa.getCoefficientsAsString())
-                    .append("\n");
-        }
-        sb.append("\n");
+        sb.append("ВСЕ МОДЕЛИ АППРОКСИМАЦИИ:\n");
+        sb.append("========================================\n\n");
 
-        sb.append("СТАТИСТИЧЕСКИЕ ПОКАЗАТЕЛИ:\n");
-        sb.append("Функция            СКО (σ)     R²\n");
-        sb.append("---------------------------------\n");
         for (FunctionApproximation fa : result.getAllFunctions()) {
-            sb.append(String.format("%-15s %9.6f   %9.6f\n",
-                    fa.getName(), fa.getStandardDeviation(), fa.getRSquared()));
+            sb.append("ФУНКЦИЯ: ").append(fa.getName()).append("\n");
+            sb.append("----------------------------------------\n");
+            sb.append("Коэффициенты: ").append(fa.getCoefficientsAsString()).append("\n");
+            sb.append("СКО (σ): ").append(String.format("%.6f", fa.getStandardDeviation())).append("\n");
+            sb.append("R²: ").append(String.format("%.6f", fa.getRSquared())).append("\n");
+            
+            // Интерпретация R² для каждой модели
+            double rSquared = fa.getRSquared();
+            sb.append("Качество: ");
+            if (rSquared >= 0.95) {
+                sb.append("Отличное (R² ≥ 0.95)");
+            } else if (rSquared >= 0.85) {
+                sb.append("Хорошее (0.85 ≤ R² < 0.95)");
+            } else if (rSquared >= 0.7) {
+                sb.append("Удовлетворительное (0.7 ≤ R² < 0.85)");
+            } else {
+                sb.append("Слабое (R² < 0.7)");
+            }
+            sb.append("\n\n");
+            
+            // Детали для каждой модели
+            sb.append("Детали для ").append(fa.getName()).append(":\n");
+            sb.append("   X       Y       Ф(X)    Отклонение\n");
+            sb.append("-------------------------------------\n");
+            for (int i = 0; i < dataPoints.size(); i++) {
+                DataPoint p = dataPoints.get(i);
+                double actual = fa.getCalculatedValues().get(i);
+                double error = fa.getErrors().get(i);
+                sb.append(String.format("%7.4f  %7.4f  %7.4f  %7.4f\n",
+                        p.getX(), p.getY(), actual, error));
+            }
+            sb.append("\n");
         }
-        sb.append("\n");
 
+        sb.append("ОБЩАЯ СТАТИСТИКА:\n");
+        sb.append("========================================\n");
         sb.append("Коэффициент корреляции Пирсона (линейная): ")
-                .append(String.format("%.6f\n\n", result.getPearsonCorrelation()));
-
-        double rSquared = result.getBestFunction().getRSquared();
-        sb.append("ИНТЕРПРЕТАЦИЯ R²: ");
-        if (rSquared >= 0.95) {
-            sb.append("Отличное соответствие (R² ≥ 0.95)");
-        } else if (rSquared >= 0.85) {
-            sb.append("Хорошее соответствие (0.85 ≤ R² < 0.95)");
-        } else if (rSquared >= 0.7) {
-            sb.append("Удовлетворительное соответствие (0.7 ≤ R² < 0.85)");
-        } else {
-            sb.append("Слабое соответствие (R² < 0.7)");
-        }
-        sb.append("\n\n");
-
-        FunctionApproximation best = result.getBestFunction();
-        sb.append("ДЕТАЛИ ДЛЯ ").append(best.getName()).append(":\n");
-        sb.append("   X       Y       Ф(X)    Отклонение\n");
-        sb.append("-------------------------------------\n");
-        for (int i = 0; i < dataPoints.size(); i++) {
-            DataPoint p = dataPoints.get(i);
-            double actual = best.getCalculatedValues().get(i);
-            double error = best.getErrors().get(i);
-            sb.append(String.format("%7.4f  %7.4f  %7.4f  %7.4f\n",
-                    p.getX(), p.getY(), actual, error));
-        }
+                .append(String.format("%.6f\n", result.getPearsonCorrelation()));
 
         resultsArea.setText(sb.toString());
     }

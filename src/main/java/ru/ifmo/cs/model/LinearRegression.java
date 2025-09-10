@@ -6,7 +6,6 @@ import ru.ifmo.cs.model.functions.FunctionApproximation;
 
 import java.util.ArrayList;
 import java.util.List;
-
 public class LinearRegression implements FunctionApproximation {
     private List<Double> coefficients = new ArrayList<>();
     private List<Double> calculatedValues = new ArrayList<>();

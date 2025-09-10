@@ -15,12 +15,40 @@ public class RegressionService {
         RegressionResult result = new RegressionResult();
 
         List<FunctionApproximation> functions = new ArrayList<>();
-        functions.add(new LinearFunction().approximate(points));
-        functions.add(new QuadraticFunction().approximate(points));
-        functions.add(new CubicFunction().approximate(points));
-        functions.add(new ExponentialFunction().approximate(points));
-        functions.add(new LogarithmicFunction().approximate(points));
-        functions.add(new PowerFunction().approximate(points));
+        int n = points.size();
+        
+        // Линейная: минимум 2 точки
+        if (n >= 2) {
+            functions.add(new LinearFunction().approximate(points));
+        }
+        
+        // Квадратичная: минимум 3 точки
+        if (n >= 3) {
+            functions.add(new QuadraticFunction().approximate(points));
+        }
+        
+        // Кубическая: минимум 4 точки
+        if (n >= 4) {
+            functions.add(new CubicFunction().approximate(points));
+        }
+        
+        // Экспоненциальная: минимум 2 точки
+        if (n >= 2) {
+            functions.add(new ExponentialFunction().approximate(points));
+        }
+
+        boolean hasNonPositiveX = points.stream().anyMatch(p -> p.getX() <= 0);
+        boolean hasNonPositiveY = points.stream().anyMatch(p -> p.getY() <= 0);
+
+        // Логарифмическая: строим только при x > 0 и минимум 2 точки
+        if (!hasNonPositiveX && n >= 2) {
+            functions.add(new LogarithmicFunction().approximate(points));
+        }
+
+        // Степенная: строим только при x > 0 и y > 0 и минимум 2 точки
+        if (!hasNonPositiveX && !hasNonPositiveY && n >= 2) {
+            functions.add(new PowerFunction().approximate(points));
+        }
 
         double pearson = calculatePearsonCorrelation(points);
 
